@@ -45,6 +45,42 @@ function list_algorithms(websocket){
   }));
 }
 
+function send_data_algorithm(websocket){
+  const algorithm = {
+    algorithm_name: "FCFS",
+    quantum: -1,
+    processes: [
+      {
+        id_process: "P0",
+        arrival_time: 0,
+        burst_time: 5
+      },
+      {
+        id_process: "P1",
+        arrival_time: 1,
+        burst_time: 3
+      },
+      {
+        id_process: "P2",
+        arrival_time: 2,
+        burst_time: 8
+      },
+      {
+        id_process: "P3",
+        arrival_time: 3,
+        burst_time: 6
+      }
+    ]
+  }
+  console.log(algorithm);
+  websocket.send(JSON.stringify({ 
+    type: "send_data_algorithm",
+    id_client: id_client,
+    data: algorithm
+  }));
+}
+
+
 
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -78,11 +114,15 @@ window.addEventListener("DOMContentLoaded", () => {
     list_algorithms(websocket);
   });
 
+  document.querySelector("#send_data_algorithm").addEventListener("click", () => {
+    send_data_algorithm(websocket);
+  });
+
   websocket.onopen = () => {
       websocket.send(send_message(greeting))
     }
     websocket.onmessage = ({ data }) => {
-      console.log(data);
+      // console.log(data);
       const suceso = JSON.parse(data);
       if(suceso.type == "list_data"){
         available_events = suceso.data
@@ -96,6 +136,13 @@ window.addEventListener("DOMContentLoaded", () => {
           item.appendChild(content);
           items.appendChild(item)
         }
+      } else if(suceso.type == "algorithm_result"){
+        const processes = suceso.data
+        for(let i = 0; i < processes.length; i++){
+          let process = processes[i]
+          console.log(`Proceso ${process.id}; Status: ${process.status}; Completion time: ${process.completion_time}; Waiting time: ${process.waiting_time}`);
+        }
+        console.log("\n");
       } else {
         const item = document.createElement("li");
         const content = document.createTextNode(suceso.value);

@@ -7,8 +7,10 @@ import threading
 import os
 import time
 import json
+import jsonpickle
 
 from Eventos import *
+from Algoritmos import *
 
 USERS = set()
 global parent_PID
@@ -27,6 +29,16 @@ def stop():
     print(f"Terminando servidor en 2 segundos...")
     time.sleep(2)
     os.kill(parent_PID, signal.SIGTERM)
+
+async def fcfs(websocket, algorithm):
+    new_FCFS = FCFS(algorithm['algorithm_name'])
+    for p in algorithm['processes']:
+        new_process = Proceso(p['id_process'], p['arrival_time'], p['burst_time'])
+        new_FCFS.add_process(new_process)
+    await new_FCFS.run_algorithm(websocket)
+"""     json_object = jsonpickle.encode(new_FCFS)
+    json_string = json.dumps({"type": "algorithm_result", "data": json.loads(json_object), "message": "Resultados del algoritmo: "})
+    await websocket.send(json_string) """
 
 async def servidor(websocket):
     global EVENTOS
@@ -144,6 +156,15 @@ async def servidor(websocket):
                 id_client = suceso['id_client']
                 print(f"{id_client}: Ha solicitado la lista de algoritmos disponibles")
                 await websocket.send(send_list(ALGORITHMS, "Los algoritmos disponibles son:"))
+            elif(suceso['type'] == "send_data_algorithm"):
+                id_client = suceso['id_client']
+                algorithm = suceso['data']
+                print(f"{id_client}: Ha enviado datos para efectuar el algoritmo {algorithm['algorithm_name']}")
+                if(algorithm['algorithm_name'] == "FCFS"):
+                    new_thread = threading.Thread(target=asyncio.run, args=(fcfs(websocket,algorithm),))
+                    new_thread.start()
+                    
+                """ await websocket.send(send_list(ALGORITHMS, "Los algoritmos disponibles son:")) """
     except RuntimeError as error:
       print('Something went wrong')
       print(error)
@@ -161,6 +182,7 @@ async def main():
     loop = asyncio.get_running_loop()
     stop = loop.create_future()
     loop.add_signal_handler(signal.SIGTERM, stop.set_result, None)
+    loop.add_signal_handler(signal.SIGINT, stop.set_result, None)
     
     async with websockets.serve(servidor, "localhost", 8765, ping_interval=None):
         await stop
