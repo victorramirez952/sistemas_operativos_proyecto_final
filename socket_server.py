@@ -21,7 +21,7 @@ ALGORITHMS = ["FCFS", "RR", "SJF", "SRT", "HRNN", "MLFQ"]
 
 def execute_algoritm():
     return
-    with open("./casos_prueba_algoritmos/mlfq.json") as f:
+    with open("./casos_prueba_algoritmos/MLFQ/mlfq_rr_fcfs_x.json") as f:
         algorithm = json.load(f)
     new_MLFQ = MLFQ(algorithm['algorithm_name'], algorithm['queues'], algorithm['quantums'])
     for p in algorithm['processes']:

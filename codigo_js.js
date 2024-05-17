@@ -48,7 +48,7 @@ function list_algorithms(websocket){
 
 async function send_data_algorithm(websocket) {
   let response = await fetch(
-    "http://127.0.0.1:5500/proyecto/casos_prueba_algoritmos/hrrn.json"
+    "http://127.0.0.1:5500/proyecto/casos_prueba_algoritmos/MLFQ/mlfq_rr_fcfs_x.json"
   );
   let algorithm = await response.json();
   websocket.send(

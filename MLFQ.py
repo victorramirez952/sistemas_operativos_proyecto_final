@@ -22,7 +22,7 @@ class MLFQ(Algoritmo):
             # Revisamos si hay un proceso que falta por completarse
             if all(p.completed for p in self.processes):
                 break
-
+            
             for index in range(len(self.queues)):
                 if(process_with_highest_priority):
                     break
@@ -142,7 +142,7 @@ class MLFQ(Algoritmo):
                         if(index != len(self.queues) - 1):
                             MLFQ_deques[index + 1].extend(removed_processes)
                 #
-
+            break
             # Revisamos si hay una fila con procesos faltantes
             if all(len(f) == 0 for f in MLFQ_deques):
                 break

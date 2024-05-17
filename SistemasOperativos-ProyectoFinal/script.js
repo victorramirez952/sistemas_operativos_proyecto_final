@@ -23,11 +23,8 @@ buttons.forEach((button) => {
             let numberOfProcesses = null;
             let arrivalTimes = [];
             let burstTimes = [];
-            if(algorithm == "HRRN"){
-                console.log("HRRN pressed");
-            }
 
-          // Función para obtener el número de procesos de cada algoritmo, se debe de ingresar un número entero y no se puede dejar en blanco
+            // Función para obtener el número de procesos de cada algoritmo, se debe de ingresar un número entero y no se puede dejar en blanco
             function numeroProcesos() {
                 numberOfProcesses = prompt(`Ingrese el número de procesos para el algoritmo ${algorithm}`);
                 if (numberOfProcesses == null) {
@@ -121,9 +118,13 @@ buttons.forEach((button) => {
           // Si el algoritmo elegido es MLFQ, se declaran el número de colas y las colas en un arreglo.
         } else if (algorithm == 'MLFQ') {
             let numberOfQueues = null;
-            let queues = [];
+            let queues_names = [];
+            let queues_quantums = [];
+            let numberOfProcesses = null;
+            let arrivalTimes = [];
+            let burstTimes = [];
 
-          // Función para obtener el número de colas para cada algoritmo, se debe de ingresar un número entero y no se puede dejar en blanco
+            // Función para obtener el número de colas para cada algoritmo, se debe de ingresar un número entero y no se puede dejar en blanco
             function askNumberOfQueues() {
                 numberOfQueues = prompt(`Ingrese el número de colas para el algoritmo ${algorithm}`);
                 if (numberOfQueues == null) {
@@ -140,58 +141,90 @@ buttons.forEach((button) => {
                             }
                         }
                     }
+                    return numberOfQueues
                 }
             }
-          // Función para solicitar el tipo de algoritmo que será usado para cada una de las colas, solo se puede ingresar "FCFS","RR" "SJF", "SRT", y "HRNN"
+            // Función para solicitar el tipo de algoritmo que será usado para cada una de las colas, solo se puede ingresar "FCFS","RR" "SJF", "SRT", y "HRNN"
 
             function askAlgorithmForQueue(queueNumber) {
                 let algorithmChoice = null;
                 do {
-                    algorithmChoice = prompt(`Seleccione el algoritmo para la cola ${queueNumber}: FCFS, RR, SJF, SRT, HRNN`);
+                    algorithmChoice = prompt(`Escriba / Seleccione el algoritmo para la cola ${queueNumber}: FCFS, RR, SJF, SRT, HRRN`);
                     if(algorithmChoice == null){
                         return null
                     }
-                } while (!['FCFS', 'RR', 'SJF', 'SRT', 'HRNN'].includes(algorithmChoice));
+                } while (!['FCFS', 'RR', 'SJF', 'SRT', 'HRRN'].includes(algorithmChoice));
 
                  // Si el Algoritmo que se escribió es RR, entonces adicionalmente se pedirá el tamaño del quantum
                 if (algorithmChoice == 'RR') {
-                    const quantumSize = prompt(`Ingrese el tamaño del quantum para el algoritmo RR en la cola ${queueNumber}`);
-                    if(quantumSize == null){
-                        return null
-                    }
-                    queues.push({ algorithm: algorithmChoice, arrivalTimes: [], burstTimes: [], quantum: parseInt(quantumSize) });
+                    queues_names.push("RR")
+                    let quantumSize = null
+                    do {
+                        quantumSize = prompt(`Ingrese el tamaño del quantum para el algoritmo RR en la cola ${queueNumber}`);
+                        if (quantumSize == null){
+                            return null
+                        }
+                        quantumSize = validateNumber(quantumSize, 'quantum')
+                    } while(quantumSize == -1)
+                    queues_quantums.push(parseInt(quantumSize))
                 } else {
-                    queues.push({ algorithm: algorithmChoice, arrivalTimes: [], burstTimes: [] });
+                    queues_names.push(algorithmChoice)
+                    queues_quantums.push(-1)
                 }
-
-                askArrivalTimeForQueue(queueNumber, algorithmChoice);
+                return true
             }
-            // Función para obtener el tiempo de llegada o Arrival Time de cada cola de cada algoritmo, se debe de ingresar un número entero y no se puede dejar en blanco
+            
+            // Función para obtener el número de procesos de cada algoritmo, se debe de ingresar un número entero y no se puede dejar en blanco
+            function numeroProcesos() {
+                numberOfProcesses = prompt(`Ingrese el número de procesos para el algoritmo ${algorithm}`);
+                if (numberOfProcesses == null) {
+                    return null
+                } else {
+                    numberOfProcesses = parseInt(numberOfProcesses);
+                    if (isNaN(numberOfProcesses)) {
+                        alert(`El número de procesos debe ser un número entero.`);
+                        numeroProcesos();
+                    } else {
+                        for (let i = 0; i < numberOfProcesses; i++) {
+                            if(tiempoLlegada(i + 1) == null){
+                                return null
+                            }
+                        }
+                    }
+                    return numberOfProcesses
+                }
+            }
+            // Función para obtener el tiempo de llegada o Arrival Time de cada algoritmo, se debe de ingresar un número entero y no se puede dejar en blanco
 
-            function askArrivalTimeForQueue(queueNumber, algorithm) {
+            function tiempoLlegada(index) {
                 let arrivalTime = null;
                 do {
-                    arrivalTime = prompt(`Ingrese el tiempo de llegada o Arrival Time para el proceso de la cola ${queueNumber} de ${algorithm}`);
+                    arrivalTime = prompt(`Ingrese el tiempo de llegada o Arrival Time para el proceso ${index} de ${algorithm}`);
                     if (arrivalTime == null) {
-                        return;
+                        return null
                     }
                     arrivalTime = validateNumber(arrivalTime, 'arrival time');
                 } while (arrivalTime == -1);
-                queues[queueNumber - 1].arrivalTimes.push(arrivalTime);
-                askBurstTimeForQueue(queueNumber, algorithm);
+                arrivalTimes.push(arrivalTime);
+                if(tiempoSalida(index) == null){
+                    return null
+                }
+                return arrivalTime
             }
 
-          // Función para obtener el tiempo de salida o Burst Time de cada cola de cada algoritmo, se debe de ingresar un número entero y no se puede dejar en blanco
-            function askBurstTimeForQueue(queueNumber, algorithm) {
+          // Función para obtener el tiempo de salida o Burst Time de cada algoritmo, se debe de ingresar un número entero y no se puede dejar en blanco
+
+            function tiempoSalida(index) {
                 let burstTime = null;
                 do {
-                    burstTime = prompt(`Ingrese el tiempo de salida o Burst Time para el proceso de la cola ${queueNumber} de ${algorithm}`);
+                    burstTime = prompt(`Ingrese el tiempo de salida o Burst Time para el proceso ${index} de ${algorithm}`);
                     if (burstTime == null) {
-                        return
+                        return null
                     }
                     burstTime = validateNumber(burstTime, 'burst time');
                 } while (burstTime == -1);
-                queues[queueNumber - 1].burstTimes.push(burstTime);
+                burstTimes.push(burstTime);
+                return burstTime
             }
           
           // Función para validar que el número ingresado sea un número entero
@@ -199,30 +232,41 @@ buttons.forEach((button) => {
                 let validNumber = parseInt(value);
                 if (isNaN(validNumber)) {
                     alert(`El ${field} debe ser un número entero.`);
-                    return null;
+                    return -1;
                 } else {
                     return validNumber;
                 }
             }
-          // Función para procesar los resultados de MLFQ
-          function processResultsMLFQ(algorithm, queues) {
-              let processQueue = [];
-              for (let i = 0; i < queues.length; i++) {
-                  for (let j = 0; j < queues[i].arrivalTimes.length; j++) {
-                      processQueue.push({
-                          arrivalTime: queues[i].arrivalTimes[j],
-                          burstTime: queues[i].burstTimes[j],
-                          algorithm: queues[i].algorithm
-                      });
-                  }
-              }
-          }
 
             if(askNumberOfQueues() == null){
                 return
             }
-            
-            processResultsMLFQ(algorithm, queues);
+
+            if(numeroProcesos() == null){
+                return
+            }
+
+            const data_algorithm = {
+                "algorithm_name": "MLFQ",
+                "quantums": queues_quantums,
+                "queues": queues_names,
+                "processes": []
+            }
+
+            for(let i = 0; i < arrivalTimes.length; i++){
+                let new_process = {
+                    "id_process": `P${i+1}`,
+                    "arrival_time": arrivalTimes[i],
+                    "burst_time": burstTimes[i]
+                }
+                data_algorithm.processes.push(new_process)
+            }
+
+            data_algorithm.processes.sort(
+                (p1, p2) => p1.arrival_time - p2.arrival_time
+            )
+
+            send_data_algorithm(data_algorithm)
         }
     });
 });

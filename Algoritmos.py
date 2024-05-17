@@ -60,6 +60,7 @@ class Proceso_MLFQ(Proceso):
     def __init__(self, id, arrival_time, burst_time):
         Proceso.__init__(self, id, arrival_time, burst_time)
         self.queue_index = 0
+        self.mlfq_ed = False
 
 class Algoritmo:
     def __init__(self, name):
@@ -93,17 +94,19 @@ class FCFS(Algoritmo):
         self.time_service = time_service
     
     async def run_algorithm(self, websocket, id_client):
-        time_service = 0
+        self.time_service = 0
         for i in self.processes:
-            while(time_service < i.arrival_time):
-                time_service += 1
+            while(self.time_service < i.arrival_time):
+                self.time_service += 1
             i.set_status("En ejecucion")
             await self.send_json(websocket)
-            _burst_time = i.burst_time
-            await asyncio.sleep(_burst_time)
-            time_service += _burst_time
-            i.completion_time += time_service
+            await asyncio.sleep(i.burst_time)
+
+            self.time_service += i.burst_time
+            i.completion_time += self.time_service
+            i.remaining_time = 0
             i.set_status("Finalizado")
+            i.completed = True
             await self.send_json(websocket)
         self.turnaround_time_waiting_time()
         await self.send_json(websocket)
@@ -140,10 +143,11 @@ class FCFS(Algoritmo):
             it_process.set_status("En ejecucion")
             await self.send_json(websocket)
             
-            _remaining_time = it_process.remaining_time
-            await asyncio.sleep(it_process.burst_time)
-            self.time_service += _remaining_time
+            await asyncio.sleep(it_process.remaining_time)
+            self.time_service += it_process.remaining_time
+            it_process.remaining_time = 0
             it_process.completion_time += self.time_service
+            it_process.completed = True
 
             it_process.set_status("Finalizado")
             await self.send_json(websocket)
@@ -153,7 +157,7 @@ class FCFS(Algoritmo):
             if(len(temp_deque) != 0):
                 process_with_highest_priority = True
                 arrived_highest_processes = temp_deque
-            # print(f"Completion time of {it_process.id} is {self.time_service}")
+            # print(f"FCFS - Completion time of {it_process.id} is {self.time_service}")
             # json_list = jsonpickle.encode(self.processes)
             # json_string = json.dumps({"type": "algorithm_result", "data": json.loads(json_list), "message": "Resultados del algoritmo: "})
             #await websocket.send(json_string)
@@ -370,6 +374,7 @@ class RR(Algoritmo):
                 await self.send_json(websocket)
                 await asyncio.sleep(1)
 
+                self.mlfq_ed = True
                 self.processes[current_index].remaining_time -= 1
                 self.time_service += 1
                 counter += 1
@@ -382,7 +387,7 @@ class RR(Algoritmo):
             if(self.processes[current_index].remaining_time == 0):
                 self.processes[current_index].completed = True
                 self.processes[current_index].completion_time = self.time_service
-                # print(f"Completion time for {self.processes[current_index].id} is {self.time_service}")
+                # print(f"RR - Completion time for{self.processes[current_index].id} is {self.time_service}")
                 self.processes[current_index].set_status("Finalizado")
                 await self.send_json(websocket)
                 _deque.popleft()
@@ -478,7 +483,7 @@ class SRT(Algoritmo):
             
         self.turnaround_time_waiting_time()
         await self.send_json(websocket)
-        print(f"Algoritmo Shortest Remaining Time completado para el cliente {id_client}")
+        # Algoritmo Shortest Remaining Time completado para el cliente {id_client}")
 
     async def run_algorithm_mlfq(self, websocket, queue_index, _deque, max_index):
         while(self.time_service < self.processes[0].arrival_time):
