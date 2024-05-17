@@ -13,7 +13,7 @@ class MLFQ(Algoritmo):
         self.queues = _deque
         self.quantums = _quantums
         self._deque = deque()
-    def run_algorithm(self):
+    async def run_algorithm(self, websocket, id_client):
         process_with_highest_priority = False
         max_index = len(self.queues) - 1
         MLFQ_deques = [deque()]*len(self.queues)
@@ -36,7 +36,7 @@ class MLFQ(Algoritmo):
                     new_RR_MLFQ.set_processes(self.processes)
                     new_RR_MLFQ.set_time_service(self.time_service)
 
-                    results = new_RR_MLFQ.run_algorithm_mlfq(index, MLFQ_deques[index], max_index)
+                    results = await new_RR_MLFQ.run_algorithm_mlfq(websocket, index, MLFQ_deques[index], max_index)
                     r_time_service = results[0]
                     process_with_highest_priority = results[1]
                     arrived_highest_processes = results[2]
@@ -58,7 +58,7 @@ class MLFQ(Algoritmo):
                     new_FCFS_MLFQ.set_processes(self.processes)
                     new_FCFS_MLFQ.set_time_service(self.time_service)
 
-                    results = new_FCFS_MLFQ.run_algorithm_mlfq(index, MLFQ_deques[index], max_index)
+                    results = await new_FCFS_MLFQ.run_algorithm_mlfq(websocket, index, MLFQ_deques[index], max_index)
                     r_time_service = results[0]
                     process_with_highest_priority = results[1]
                     arrived_highest_processes = results[2]
@@ -80,7 +80,7 @@ class MLFQ(Algoritmo):
                     new_SRT_MLFQ.set_processes(self.processes)
                     new_SRT_MLFQ.set_time_service(self.time_service)
 
-                    results = new_SRT_MLFQ.run_algorithm_mlfq(index, MLFQ_deques[index], max_index)
+                    results = await new_SRT_MLFQ.run_algorithm_mlfq(websocket, index, MLFQ_deques[index], max_index)
                     r_time_service = results[0]
                     process_with_highest_priority = results[1]
                     arrived_highest_processes = results[2]
@@ -102,7 +102,7 @@ class MLFQ(Algoritmo):
                     new_HRRN_MLFQ.set_processes(self.processes)
                     new_HRRN_MLFQ.set_time_service(self.time_service)
 
-                    results = new_HRRN_MLFQ.run_algorithm_mlfq(index, MLFQ_deques[index], max_index)
+                    results = await new_HRRN_MLFQ.run_algorithm_mlfq(websocket, index, MLFQ_deques[index], max_index)
                     r_time_service = results[0]
                     process_with_highest_priority = results[1]
                     arrived_highest_processes = results[2]
@@ -123,8 +123,8 @@ class MLFQ(Algoritmo):
                     new_SJF_MLFQ = SJF(self.queues[index])
                     new_SJF_MLFQ.set_processes(self.processes)
                     new_SJF_MLFQ.set_time_service(self.time_service)
-
-                    results = new_SJF_MLFQ.run_algorithm_mlfq(index, MLFQ_deques[index], max_index)
+    
+                    results = await new_SJF_MLFQ.run_algorithm_mlfq(websocket, index, MLFQ_deques[index], max_index)
                     r_time_service = results[0]
                     process_with_highest_priority = results[1]
                     arrived_highest_processes = results[2]
@@ -146,4 +146,6 @@ class MLFQ(Algoritmo):
             # Revisamos si hay una fila con procesos faltantes
             if all(len(f) == 0 for f in MLFQ_deques):
                 break
-        print("Algoritmo MLFQ completado")
+        print(f"Algoritmo Multilevel Feedback Queue completado para el cliente {id_client}")
+        self.turnaround_time_waiting_time()
+        await self.send_json(websocket)

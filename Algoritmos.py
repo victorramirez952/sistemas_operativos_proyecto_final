@@ -73,11 +73,12 @@ class Algoritmo:
     def get_processes():
         return self.processes
     
-    def send_json(self):
+    async def send_json(self, websocket):
         json_list = jsonpickle.encode(self.processes)
         json_string = json.dumps({"type": "algorithm_result", "data": json.loads(json_list), "message": "Resultados del algoritmo: "})
-        return json_string
+        await websocket.send(json_string)
     
+
     def turnaround_time_waiting_time(self):
         for i in self.processes:
             i.turnaround_time = i.completion_time - i.arrival_time
@@ -91,24 +92,22 @@ class FCFS(Algoritmo):
     def set_time_service(self, time_service):
         self.time_service = time_service
     
-    async def run_algorithm(self, websocket):
+    async def run_algorithm(self, websocket, id_client):
         time_service = 0
         for i in self.processes:
             i.set_status("En ejecucion")
+            await self.send_json(websocket)
             _burst_time = i.burst_time
-            print(f"Ejecutando proceso {i.id} durante {_burst_time} segundos: ")
-            time.sleep(_burst_time)
+            await asyncio.sleep(_burst_time)
             time_service += _burst_time
             i.completion_time += time_service
             i.set_status("Finalizado")
-            json_string = self.send_json()
-            await websocket.send(json_string)
+            await self.send_json(websocket)
         self.turnaround_time_waiting_time()
-        json_string = json_string = self.send_json()
-        await websocket.send(json_string)
-        print("Proceso FCFS completado")
+        await self.send_json(websocket)
+        print(f"Algoritmo First Come First Serve completado para el cliente {id_client}")
 
-    def run_algorithm_mlfq(self, queue_index, _deque, max_index):
+    async def run_algorithm_mlfq(self, websocket, queue_index, _deque, max_index):
         if(len(_deque) == 0):
             for p in self.processes:
                 _deque.append(p)
@@ -137,12 +136,16 @@ class FCFS(Algoritmo):
                 continue
             
             it_process.set_status("En ejecucion")
+            await self.send_json(websocket)
+            
             _remaining_time = it_process.remaining_time
-            # asyncio.sleep(_remaining_time)
+            await asyncio.sleep(it_process.burst_time)
             self.time_service += _remaining_time
             it_process.completion_time += self.time_service
+
             it_process.set_status("Finalizado")
-            it_process.completed = True
+            await self.send_json(websocket)
+            
             _deque.popleft()
             temp_deque = mlfq_check_arrival_highest_process(self.time_service, self.processes, queue_index, False)
             if(len(temp_deque) != 0):
@@ -178,7 +181,7 @@ class SJF(Algoritmo):
                 min_burst_time = it_process.burst_time
         return index_sjf
     
-    async def run_algorithm(self, websocket):
+    async def run_algorithm(self, websocket, id_client):
         while(self.time_service < self.processes[0].arrival_time):
             self.time_service += 1
         
@@ -194,9 +197,8 @@ class SJF(Algoritmo):
             
             while(self.processes[current_index].remaining_time > 0):
                 self.processes[current_index].remaining_time -= 1
-                self.processes[current_index].set_status("Finalizado")
-                json_string = self.send_json()
-                await websocket.send(json_string)
+                self.processes[current_index].set_status("En ejecucion")
+                await self.send_json(websocket)
                 await asyncio.sleep(1)
                 self.time_service += 1
 
@@ -205,16 +207,14 @@ class SJF(Algoritmo):
                 # print(f"Completion time for {self.processes[current_index].id} is {self.time_service}")
                 self.processes[current_index].completion_time = self.time_service
                 self.processes[current_index].set_status("Finalizado")
-                json_string = self.send_json()
-                await websocket.send(json_string)
+                await self.send_json(websocket)
             
             current_index = self.__index_sjf()
         self.turnaround_time_waiting_time()
-        json_string = json_string = self.send_json()
-        await websocket.send(json_string)
-        print("Algoritmo SJF completado")
+        await self.send_json(websocket)
+        print(f"Algoritmo Shortest Job First completado para el cliente {id_client}")
 
-    def run_algorithm_mlfq(self, queue_index, _deque, max_index):
+    async def run_algorithm_mlfq(self, websocket, queue_index, _deque, max_index):
         while(self.time_service < self.processes[0].arrival_time):
             self.time_service += 1
         
@@ -235,6 +235,9 @@ class SJF(Algoritmo):
                 break
             
             while(self.processes[current_index].remaining_time > 0):
+                self.processes[current_index].set_status("En ejecucion")
+                await self.send_json(websocket)
+                await asyncio.sleep(1)
                 self.processes[current_index].remaining_time -= 1
                 self.time_service += 1
             
@@ -242,11 +245,16 @@ class SJF(Algoritmo):
                 self.processes[current_index].completed = True
                 # print(f"Completion time for {self.processes[current_index].id} is {self.time_service}")
                 self.processes[current_index].completion_time = self.time_service
+                self.processes[current_index].set_status("Finalizado")
+                await self.send_json(websocket)
     
             temp_deque = mlfq_check_arrival_highest_process(self.time_service, self.processes, queue_index, False)
             if(len(temp_deque) != 0):
                 process_with_highest_priority = True
                 arrived_highest_processes = temp_deque
+
+                self.processes[current_index].set_status("En espera")
+                await self.send_json(websocket)
                 # print_elements(arrived_highest_processes, "*")
             if(process_with_highest_priority):
                 break
@@ -272,7 +280,7 @@ class RR(Algoritmo):
             if(p.arrival_time <= self.time_service and p not in _deque and not p.completed):
                 _deque.append(p)
 
-    async def run_algorithm(self, websocket):
+    async def run_algorithm(self, websocket, id_client):
         self.time_service = 0
         _deque = deque()
         
@@ -297,8 +305,7 @@ class RR(Algoritmo):
             counter = 0
             while((self.processes[current_index].remaining_time > 0) and (counter < self.quantum)):
                 self.processes[current_index].set_status("En ejecucion")
-                json_string = json_string = self.send_json()
-                await websocket.send(json_string)
+                await self.send_json(websocket)
                 await asyncio.sleep(1)
                 self.processes[current_index].remaining_time -= 1
                 self.time_service += 1
@@ -307,21 +314,22 @@ class RR(Algoritmo):
             
             if(self.processes[current_index].remaining_time == 0):
                 self.processes[current_index].completed = True
+                self.processes[current_index].completion_time = self.time_service
                 # print(f"Completion time for {self.processes[current_index].id} is {self.time_service}")
                 self.processes[current_index].completion_time = self.time_service
                 self.processes[current_index].set_status("Finalizado")
                 _deque.popleft()
-                json_string = json_string = self.send_json()
-                await websocket.send(json_string)
+                await self.send_json(websocket)
             else:
+                self.processes[current_index].set_status("En espera")
                 temp_process = _deque.popleft()
                 _deque.append(temp_process)
+                await self.send_json(websocket)
         self.turnaround_time_waiting_time()
-        json_string = json_string = self.send_json()
-        await websocket.send(json_string)
-        print("Algoritmo RR completado")
+        await self.send_json(websocket)
+        print(f"Algoritmo Round Robin completado para el cliente {id_client}")
     
-    def run_algorithm_mlfq(self, queue_index, _deque, max_index):
+    async def run_algorithm_mlfq(self, websocket, queue_index, _deque, max_index):
         if(not self.is_mlfq):
             return
         
@@ -353,6 +361,10 @@ class RR(Algoritmo):
             counter = 0
 
             while((self.processes[current_index].remaining_time > 0) and (counter < self.quantum)):
+                self.processes[current_index].set_status("En ejecucion")
+                await self.send_json(websocket)
+                await asyncio.sleep(1)
+
                 self.processes[current_index].remaining_time -= 1
                 self.time_service += 1
                 counter += 1
@@ -364,7 +376,10 @@ class RR(Algoritmo):
                     # print_elements(arrived_highest_processes, "*")
             if(self.processes[current_index].remaining_time == 0):
                 self.processes[current_index].completed = True
+                self.processes[current_index].completion_time = self.time_service
                 # print(f"Completion time for {self.processes[current_index].id} is {self.time_service}")
+                self.processes[current_index].set_status("Finalizado")
+                await self.send_json(websocket)
                 _deque.popleft()
             else:
                 temp_process = _deque.popleft()
@@ -374,6 +389,8 @@ class RR(Algoritmo):
                     # print(f"Elevando prioridad a proceso con id {temp_process.id} y remaining time de {temp_process.remaining_time} in t={self.time_service}")
                     self.processes[current_index].queue_index += 1
                     removed_processes.append(temp_process)
+                self.processes[current_index].set_status("En espera")
+                await self.send_json(websocket)
         remaining_processes = _deque
         return [self.time_service, process_with_highest_priority, arrived_highest_processes, _deque, removed_processes]
 
@@ -400,7 +417,6 @@ class SRT(Algoritmo):
     def __getMinBurstTime(self, queue_index = -1):
         min_index = -1
         min_burst_time = sys.maxsize
-        previous_index = -1
         for i in range(len(self.processes)):
             it_process = self.processes[i]
             if(queue_index != -1 and it_process.queue_index != queue_index):
@@ -410,11 +426,12 @@ class SRT(Algoritmo):
                 min_burst_time = it_process.burst_time
         return min_index
     
-    async def run_algorithm(self, websocket):
+    async def run_algorithm(self, websocket, id_client):
         while(self.time_service < self.processes[0].arrival_time):
             self.time_service += 1
 
         current_index = 0
+        future_new_index = -1
         while True:
             if(current_index == -1):
                 break
@@ -422,15 +439,24 @@ class SRT(Algoritmo):
             if all(p.remaining_time == 0 for p in self.processes):
                 break
             
+            for i in range(len(self.processes)):
+                it_process = self.processes[i]
+                if(i != current_index and not it_process.completed):
+                    it_process.set_status("En espera")
+            
             while(self.processes[current_index].remaining_time > 0):
                 self.processes[current_index].set_status("En ejecucion")
                 self.processes[current_index].remaining_time -= 1
-                json_string = json_string = self.send_json()
-                await websocket.send(json_string)
+                await self.send_json(websocket)
                 await asyncio.sleep(1)
                 self.time_service += 1
                 new_index = self.__checkMinBurstTime(current_index)
                 if(new_index != -1):
+                    if(self.processes[current_index].remaining_time == 0):
+                        self.processes[current_index].completed = True
+                        self.processes[current_index].completion_time = self.time_service
+                        self.processes[current_index].set_status("Finalizado")
+                        await self.send_json(websocket)
                     current_index = new_index
                     break
 
@@ -439,15 +465,14 @@ class SRT(Algoritmo):
                 # print(f"Completion time for {self.processes[current_index].id} is {self.time_service}")
                 self.processes[current_index].completion_time = self.time_service
                 self.processes[current_index].set_status("Finalizado")
-                json_string = json_string = self.send_json()
-                await websocket.send(json_string)
+                await self.send_json(websocket)
                 current_index = self.__getMinBurstTime()
+            
         self.turnaround_time_waiting_time()
-        json_string = json_string = self.send_json()
-        await websocket.send(json_string)
-        print("Algoritmo SRT completado")
+        await self.send_json(websocket)
+        print(f"Algoritmo Shortest Remaining Time completado para el cliente {id_client}")
 
-    def run_algorithm_mlfq(self, queue_index, _deque, max_index):
+    async def run_algorithm_mlfq(self, websocket, queue_index, _deque, max_index):
         while(self.time_service < self.processes[0].arrival_time):
             self.time_service += 1
         
@@ -475,13 +500,23 @@ class SRT(Algoritmo):
             if(current_index == -1):
                 break
             
+            for i in range(len(self.processes)):
+                it_process = self.processes[i]
+                if(i != current_index and not it_process.completed):
+                    it_process.set_status("En espera")
+            
             while(self.processes[current_index].remaining_time > 0):
+                self.processes[current_index].set_status("En ejecucion")
                 self.processes[current_index].remaining_time -= 1
+                await self.send_json(websocket)
+                await asyncio.sleep(1)
                 self.time_service += 1
                 temp_deque = mlfq_check_arrival_highest_process(self.time_service, self.processes, queue_index, True)
                 if(len(temp_deque) != 0):
                     process_with_highest_priority = True
                     arrived_highest_processes = temp_deque
+                    self.processes[current_index].set_status("En espera")
+                    await self.send_json(websocket)
                     # print_elements(arrived_highest_processes, "*")
                 if(process_with_highest_priority):
                     break
@@ -492,11 +527,21 @@ class SRT(Algoritmo):
                         # print(f"Elevando prioridad a proceso con id {temp_process.id} y remaining time de {temp_process.remaining_time} in t={self.time_service}")
                         self.processes[current_index].queue_index += 1
                         removed_processes.append(temp_process)
+                    self.processes[current_index].set_status("En espera")
+                    if(self.processes[current_index].remaining_time == 0):
+                        self.processes[current_index].completed = True
+                        self.processes[current_index].completion_time = self.time_service
+                        self.processes[current_index].set_status("Finalizado")
+                    await self.send_json(websocket)              
                     current_index = new_index
                     break
             if(self.processes[current_index].remaining_time == 0):
                 self.processes[current_index].completed = True
+                self.processes[current_index].completion_time = self.time_service
+                self.processes[current_index].set_status("Finalizado")
+                await self.send_json(websocket)
                 # print(f"Completion time for {self.processes[current_index].id} is {self.time_service}")
+            current_index = self.__getMinBurstTime()
         remaining_processes = deque()
         _deque = deque()
         return [self.time_service, process_with_highest_priority, arrived_highest_processes, _deque, removed_processes]
@@ -527,7 +572,7 @@ class HRRN(Algoritmo):
                     max_hrrn = temp_hrrn
         return max_hrrn_index
     
-    async def run_algorithm(self, websocket):
+    async def run_algorithm(self, websocket, id_client):
         while(self.time_service < self.processes[0].arrival_time):
             self.time_service += 1
         
@@ -543,8 +588,7 @@ class HRRN(Algoritmo):
             
             while(self.processes[current_index].remaining_time > 0):
                 self.processes[current_index].set_status("En ejecucion")
-                json_string = json_string = self.send_json()
-                await websocket.send(json_string)
+                await self.send_json(websocket)
                 await asyncio.sleep(1)
                 self.processes[current_index].remaining_time -= 1
                 self.time_service += 1
@@ -554,15 +598,13 @@ class HRRN(Algoritmo):
                 self.processes[current_index].completed = True
                 self.processes[current_index].completion_time = self.time_service
                 self.processes[current_index].set_status("Finalizado")
-                json_string = json_string = self.send_json()
-                await websocket.send(json_string)
+                await self.send_json(websocket)
             current_index = self.__get_index_hrrn()
         self.turnaround_time_waiting_time()
-        json_string = json_string = self.send_json()
-        await websocket.send(json_string)
-        print("Algoritmo HRRN completado")
+        await self.send_json(websocket)
+        print(f"Algoritmo Highest Response Ratio Next completado para el cliente {id_client}")
 
-    def run_algorithm_mlfq(self, queue_index, _deque, max_index):
+    async def run_algorithm_mlfq(self, websocket, queue_index, _deque, max_index):
         while(self.time_service < self.processes[0].arrival_time):
             self.time_service += 1
         
@@ -582,6 +624,9 @@ class HRRN(Algoritmo):
                 break
             
             while(self.processes[current_index].remaining_time > 0):
+                self.processes[current_index].set_status("En ejecucion")
+                await self.send_json(websocket)
+                await asyncio.sleep(1)
                 self.processes[current_index].remaining_time -= 1
                 self.time_service += 1
             
@@ -589,11 +634,15 @@ class HRRN(Algoritmo):
                 # print(f"Completion time of {self.processes[current_index].id} is {self.time_service}")
                 self.processes[current_index].completed = True
                 self.processes[current_index].completion_time = self.time_service
+                self.processes[current_index].set_status("Finalizado")
+                await self.send_json(websocket)
             
             temp_deque = mlfq_check_arrival_highest_process(self.time_service, self.processes, queue_index, False)
             if(len(temp_deque) != 0):
                 process_with_highest_priority = True
                 arrived_highest_processes = temp_deque
+                self.processes[current_index].set_status("En espera")
+                await self.send_json(websocket)
                 # print_elements(arrived_highest_processes, "-")
             
             if(process_with_highest_priority):

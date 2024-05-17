@@ -20,6 +20,7 @@ EVENTOS = set()
 ALGORITHMS = ["FCFS", "RR", "SJF", "SRT", "HRNN", "MLFQ"]
 
 def execute_algoritm():
+    return
     with open("./casos_prueba_algoritmos/mlfq.json") as f:
         algorithm = json.load(f)
     new_MLFQ = MLFQ(algorithm['algorithm_name'], algorithm['queues'], algorithm['quantums'])
@@ -40,44 +41,53 @@ def stop():
     time.sleep(2)
     os.kill(parent_PID, signal.SIGTERM)
 
-async def fcfs(websocket, algorithm):
+async def fcfs(websocket, algorithm, id_client):
+    print(f"Ejecutando el algorithmo {algorithm['algorithm_name']} para el client {id_client}")
     new_FCFS = FCFS(algorithm['algorithm_name'])
     for p in algorithm['processes']:
         new_process = Proceso(p['id_process'], p['arrival_time'], p['burst_time'])
         new_FCFS.add_process(new_process)
-    await new_FCFS.run_algorithm(websocket)
+    await new_FCFS.run_algorithm(websocket, id_client)
 
-async def rr(websocket, algorithm):
-    print(f"Ejecutando el algorithmo {algorithm['algorithm_name']}")
+async def rr(websocket, algorithm, id_client):
+    print(f"Ejecutando el algorithmo {algorithm['algorithm_name']} para el client {id_client}")
     new_RR = RR(algorithm['algorithm_name'], algorithm['quantum'])
     for p in algorithm['processes']:
         new_process = Proceso(p['id_process'], p['arrival_time'], p['burst_time'])
         new_RR.add_process(new_process)
-    await new_RR.run_algorithm(websocket)
+    await new_RR.run_algorithm(websocket, id_client)
 
-async def sjf(websocket, algorithm):
-    print(f"Ejecutando el algorithmo {algorithm['algorithm_name']}")
+async def sjf(websocket, algorithm, id_client):
+    print(f"Ejecutando el algorithmo {algorithm['algorithm_name']} para el client {id_client}")
     new_SJF = SJF(algorithm['algorithm_name'])
     for p in algorithm['processes']:
         new_process = Proceso(p['id_process'], p['arrival_time'], p['burst_time'])
         new_SJF.add_process(new_process)
-    await new_SJF.run_algorithm(websocket)
+    await new_SJF.run_algorithm(websocket, id_client)
 
-async def srt(websocket, algorithm):
-    print(f"Ejecutando el algorithmo {algorithm['algorithm_name']}")
+async def srt(websocket, algorithm, id_client):
+    print(f"Ejecutando el algorithmo {algorithm['algorithm_name']} para el client {id_client}")
     new_SRT = SRT(algorithm['algorithm_name'])
     for p in algorithm['processes']:
         new_process = Proceso(p['id_process'], p['arrival_time'], p['burst_time'])
         new_SRT.add_process(new_process)
-    await new_SRT.run_algorithm(websocket)
+    await new_SRT.run_algorithm(websocket, id_client)
 
-async def hrrn(websocket, algorithm):
-    print(f"Ejecutando el algorithmo {algorithm['algorithm_name']}")
+async def hrrn(websocket, algorithm, id_client):
+    print(f"Ejecutando el algorithmo {algorithm['algorithm_name']} para el client {id_client}")
     new_HRRN = HRRN(algorithm['algorithm_name'])
     for p in algorithm['processes']:
         new_process = Proceso(p['id_process'], p['arrival_time'], p['burst_time'])
         new_HRRN.add_process(new_process)
-    await new_HRRN.run_algorithm(websocket)
+    await new_HRRN.run_algorithm(websocket, id_client)
+
+async def mlfq(websocket, algorithm, id_client):
+    print(f"Ejecutando el algorithmo {algorithm['algorithm_name']} para el client {id_client}")
+    new_MLFQ = MLFQ(algorithm['algorithm_name'], algorithm['queues'], algorithm['quantums'])
+    for p in algorithm['processes']:
+        new_process = Proceso_MLFQ(p['id_process'], p['arrival_time'], p['burst_time'])
+        new_MLFQ.add_process(new_process)
+    await new_MLFQ.run_algorithm(websocket, id_client)
 
 
 async def servidor(websocket):
@@ -201,19 +211,22 @@ async def servidor(websocket):
                 algorithm = suceso['data']
                 print(f"{id_client}: Ha enviado datos para efectuar el algoritmo {algorithm['algorithm_name']}")
                 if(algorithm['algorithm_name'] == "FCFS"):
-                    new_thread = threading.Thread(target=asyncio.run, args=(fcfs(websocket,algorithm),))
+                    new_thread = threading.Thread(target=asyncio.run, args=(fcfs(websocket,algorithm, id_client),))
                     new_thread.start()
                 elif(algorithm['algorithm_name'] == "RR"):
-                    new_thread = threading.Thread(target=asyncio.run, args=(rr(websocket,algorithm),))
+                    new_thread = threading.Thread(target=asyncio.run, args=(rr(websocket,algorithm, id_client),))
                     new_thread.start()
                 elif(algorithm['algorithm_name'] == "SJF"):
-                    new_thread = threading.Thread(target=asyncio.run, args=(sjf(websocket,algorithm),))
+                    new_thread = threading.Thread(target=asyncio.run, args=(sjf(websocket,algorithm, id_client),))
                     new_thread.start()
                 elif(algorithm['algorithm_name'] == "SRT"):
-                    new_thread = threading.Thread(target=asyncio.run, args=(srt(websocket,algorithm),))
+                    new_thread = threading.Thread(target=asyncio.run, args=(srt(websocket,algorithm, id_client),))
                     new_thread.start()
                 elif(algorithm['algorithm_name'] == "HRRN"):
-                    new_thread = threading.Thread(target=asyncio.run, args=(hrrn(websocket,algorithm),))
+                    new_thread = threading.Thread(target=asyncio.run, args=(hrrn(websocket,algorithm, id_client),))
+                    new_thread.start()
+                elif(algorithm['algorithm_name'] == "MLFQ"):
+                    new_thread = threading.Thread(target=asyncio.run, args=(mlfq(websocket,algorithm, id_client),))
                     new_thread.start()
     except RuntimeError as error:
       print('Something went wrong')
@@ -243,4 +256,4 @@ if __name__ == "__main__":
     execute_algoritm()
     parent_PID = threading.get_native_id()
     print(f"Parent PID: {parent_PID}")
-    # asyncio.run(main())
+    asyncio.run(main())
