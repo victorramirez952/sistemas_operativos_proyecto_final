@@ -47,28 +47,23 @@ function list_algorithms(websocket){
 
 function send_data_algorithm(websocket){
   const algorithm = {
-    algorithm_name: "FCFS",
-    quantum: -1,
+    algorithm_name: "RR",
+    quantum: 5,
     processes: [
       {
-        id_process: "P0",
-        arrival_time: 0,
-        burst_time: 5
-      },
-      {
         id_process: "P1",
-        arrival_time: 1,
-        burst_time: 3
+        arrival_time: 0,
+        burst_time: 26
       },
       {
         id_process: "P2",
-        arrival_time: 2,
-        burst_time: 8
+        arrival_time: 0,
+        burst_time: 4
       },
       {
         id_process: "P3",
-        arrival_time: 3,
-        burst_time: 6
+        arrival_time: 0,
+        burst_time: 4
       }
     ]
   }

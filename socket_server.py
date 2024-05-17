@@ -36,9 +36,14 @@ async def fcfs(websocket, algorithm):
         new_process = Proceso(p['id_process'], p['arrival_time'], p['burst_time'])
         new_FCFS.add_process(new_process)
     await new_FCFS.run_algorithm(websocket)
-"""     json_object = jsonpickle.encode(new_FCFS)
-    json_string = json.dumps({"type": "algorithm_result", "data": json.loads(json_object), "message": "Resultados del algoritmo: "})
-    await websocket.send(json_string) """
+
+async def rr(websocket, algorithm):
+    new_RR = FCFS(algorithm['algorithm_name'])
+    for p in algorithm['processes']:
+        new_process = Proceso(p['id_process'], p['arrival_time'], p['burst_time'])
+        new_RR.add_process(new_process)
+    await new_RR.run_algorithm(websocket)
+
 
 async def servidor(websocket):
     global EVENTOS
@@ -163,8 +168,9 @@ async def servidor(websocket):
                 if(algorithm['algorithm_name'] == "FCFS"):
                     new_thread = threading.Thread(target=asyncio.run, args=(fcfs(websocket,algorithm),))
                     new_thread.start()
-                    
-                """ await websocket.send(send_list(ALGORITHMS, "Los algoritmos disponibles son:")) """
+                elif(algorithm['algorithm_name'] == "RR"):
+                    new_thread = threading.Thread(target=asyncio.run, args=(rr(websocket,algorithm),))
+                    new_thread.start()
     except RuntimeError as error:
       print('Something went wrong')
       print(error)
