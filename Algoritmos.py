@@ -95,6 +95,8 @@ class FCFS(Algoritmo):
     async def run_algorithm(self, websocket, id_client):
         time_service = 0
         for i in self.processes:
+            while(time_service < i.arrival_time):
+                time_service += 1
             i.set_status("En ejecucion")
             await self.send_json(websocket)
             _burst_time = i.burst_time

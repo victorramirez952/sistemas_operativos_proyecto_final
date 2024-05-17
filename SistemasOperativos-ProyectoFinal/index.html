@@ -13,21 +13,21 @@
     <input type="text" id="search-input" placeholder="Ingresa un comando">
     <h2>Algoritmos disponibles</h2>
     <div id="algorithm-buttons">
-      <button onclick="window.location.href='FCFS_form.html'">FCFS</button>
-      <button onclick="window.location.href='RR_form.html'">RR</button>
-      <button onclick="window.location.href='SJF_form.html'">SJF</button>
-      <button onclick="window.location.href='SRT_form.html'">SRT</button>
-      <button onclick="window.location.href='HRNN_form.html'">HRNN</button>
-      <button onclick="window.location.href='MLFQ_form.html'">MLFQ</button>
+      <button id="fcfs-btn">FCFS</button>
+      <button id="rr-btn">RR</button>
+      <button id="sjf-btn">SJF</button>
+      <button id="srt-btn">SRT</button>
+      <button id="hrnn-btn">HRNN</button>
+      <button id="mlfq-btn">MLFQ</button>
     </div>
     <br>
     <div class="left-content">
       <div class="terminal">
-        <textarea class="terminal-input" id="command" placeholder="Terminal de comandos"></textarea>
+        <ul class="terminal-output" id="output_server"></ul>
       </div>
     </div>
     <div class="right-content">
-      <table id="event-table">
+      <table id="processes-table">
         <thead>
           <tr>
             <th>ID</th>
@@ -36,25 +36,16 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
+          <!-- <tr>
             <td>P1</td>
             <td>Terminado</td>
             <td>3</td>
-          </tr>
-          <tr>
-            <td>P3</td>
-            <td>En ejecución</td>
-            <td>-</td>
-          </tr>
-          <tr>
-            <td>P2</td>
-            <td>En espera</td>
-            <td>-</td>
-          </tr>
+          </tr> -->
         </tbody>
       </table>
     </div>
   </div>
+  <script src="websocket_logic.js"></script>
   <script src="script.js"></script>
 </body>
 

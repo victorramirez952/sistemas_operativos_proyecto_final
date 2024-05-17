@@ -48,7 +48,7 @@ function list_algorithms(websocket){
 
 async function send_data_algorithm(websocket) {
   let response = await fetch(
-    "http://127.0.0.1:5500/proyecto/casos_prueba_algoritmos/MLFQ/mlfq_hrrn.json"
+    "http://127.0.0.1:5500/proyecto/casos_prueba_algoritmos/hrrn.json"
   );
   let algorithm = await response.json();
   websocket.send(
@@ -118,6 +118,7 @@ window.addEventListener("DOMContentLoaded", () => {
         }
       } else if(suceso.type == "algorithm_result"){
         const processes = suceso.data
+        console.log(processes);
         for(let i = 0; i < processes.length; i++){
           let process = processes[i]
           console.log(`Proceso ${process.id}; Status: ${process.status}; Completion time: ${process.completion_time}; Waiting time: ${process.waiting_time}`);
