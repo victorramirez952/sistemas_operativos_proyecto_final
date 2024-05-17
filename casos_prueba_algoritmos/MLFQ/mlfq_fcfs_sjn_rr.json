@@ -1,0 +1,22 @@
+{
+    "algorithm_name": "MLFQ",
+    "quantums": [-1, -1, 5],
+    "queues": ["FCFS", "SJN", "RR"],
+    "processes": [
+        {
+          "id_process": "P1",
+          "arrival_time": 0,
+          "burst_time": 10
+        },
+        {
+          "id_process": "P2",
+          "arrival_time": 1,
+          "burst_time": 5
+        },
+        {
+          "id_process": "P3",
+          "arrival_time": 2,
+          "burst_time": 8
+        }
+    ]
+  }

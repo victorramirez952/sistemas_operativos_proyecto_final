@@ -1,0 +1,37 @@
+{
+    "algorithm_name": "MLFQ",
+    "quantums": [2, 7],
+    "queues": ["RR", "RR"],
+    "processes": [
+      {
+        "id_process": "P1",
+        "arrival_time": 0,
+        "burst_time": 6
+      },
+      {
+        "id_process": "P2",
+        "arrival_time": 0,
+        "burst_time": 4
+      },
+      {
+        "id_process": "P3",
+        "arrival_time": 1,
+        "burst_time": 7
+      },
+      {
+        "id_process": "P4",
+        "arrival_time": 2,
+        "burst_time": 3
+      },
+      {
+        "id_process": "P5",
+        "arrival_time": 19,
+        "burst_time": 7
+      },
+      {
+        "id_process": "P6",
+        "arrival_time": 24,
+        "burst_time": 10
+      }
+    ]
+  }

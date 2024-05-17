@@ -11,6 +11,7 @@ import jsonpickle
 
 from Eventos import *
 from Algoritmos import *
+from MLFQ import MLFQ
 
 USERS = set()
 global parent_PID
@@ -19,14 +20,13 @@ EVENTOS = set()
 ALGORITHMS = ["FCFS", "RR", "SJF", "SRT", "HRNN", "MLFQ"]
 
 def execute_algoritm():
-    return
-    with open("./casos_prueba_algoritmos/fcfs.json") as f:
+    with open("./casos_prueba_algoritmos/mlfq.json") as f:
         algorithm = json.load(f)
-    new_FCFS = FCFS(algorithm['algorithm_name'])
+    new_MLFQ = MLFQ(algorithm['algorithm_name'], algorithm['queues'], algorithm['quantums'])
     for p in algorithm['processes']:
-        new_process = Proceso(p['id_process'], p['arrival_time'], p['burst_time'])
-        new_FCFS.add_process(new_process)
-    new_FCFS.run_algorithm()
+        new_process = Proceso_MLFQ(p['id_process'], p['arrival_time'], p['burst_time'])
+        new_MLFQ.add_process(new_process)
+    new_MLFQ.run_algorithm()
 
 def send_message(message):
     return json.dumps({"type": "message", "value": message})
@@ -240,7 +240,7 @@ async def main():
 # signal.signal(signal.SIGINT, signal_handler)
 if __name__ == "__main__":
     signal.signal(signal.SIGUSR1, sigusr1_handler)
-    # execute_algoritm()
+    execute_algoritm()
     parent_PID = threading.get_native_id()
     print(f"Parent PID: {parent_PID}")
-    asyncio.run(main())
+    # asyncio.run(main())
