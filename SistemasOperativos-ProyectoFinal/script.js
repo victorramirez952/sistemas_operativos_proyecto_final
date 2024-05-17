@@ -19,16 +19,19 @@ buttons.forEach((button) => {
         
         // Si ese botón elegido contiene los algoritmos "FCFS", "SJF", "SRT", "HRNN"
         // Se declaran las variables de número de procesos, el tiempo de llegada y de salida de cada algoritmo 
-        if (['FCFS', 'SJF', 'SRT', 'HRNN'].includes(algorithm)) {
+        if (['FCFS', 'SJF', 'SRT', 'HRRN'].includes(algorithm)) {
             let numberOfProcesses = null;
             let arrivalTimes = [];
             let burstTimes = [];
+            if(algorithm == "HRRN"){
+                console.log("HRRN pressed");
+            }
 
           // Función para obtener el número de procesos de cada algoritmo, se debe de ingresar un número entero y no se puede dejar en blanco
             function numeroProcesos() {
                 numberOfProcesses = prompt(`Ingrese el número de procesos para el algoritmo ${algorithm}`);
                 if (numberOfProcesses == null) {
-                    return
+                    return null
                 } else {
                     numberOfProcesses = parseInt(numberOfProcesses);
                     if (isNaN(numberOfProcesses)) {
@@ -37,10 +40,11 @@ buttons.forEach((button) => {
                     } else {
                         for (let i = 0; i < numberOfProcesses; i++) {
                             if(tiempoLlegada(i + 1) == null){
-                                return
+                                return null
                             }
                         }
                     }
+                    return numberOfProcesses
                 }
             }
             // Función para obtener el tiempo de llegada o Arrival Time de cada algoritmo, se debe de ingresar un número entero y no se puede dejar en blanco
@@ -86,10 +90,12 @@ buttons.forEach((button) => {
                 }
             }
 
-            numeroProcesos();
+            if(numeroProcesos() == null){
+                return
+            }
 
             const data_algorithm = {
-                "algorithm_name": "FCFS",
+                "algorithm_name": `${algorithm}`,
                 "quantum": -1,
                 "processes": []
             }
@@ -170,7 +176,7 @@ buttons.forEach((button) => {
                         return;
                     }
                     arrivalTime = validateNumber(arrivalTime, 'arrival time');
-                } while (arrivalTime == null);
+                } while (arrivalTime == -1);
                 queues[queueNumber - 1].arrivalTimes.push(arrivalTime);
                 askBurstTimeForQueue(queueNumber, algorithm);
             }
@@ -184,7 +190,7 @@ buttons.forEach((button) => {
                         return
                     }
                     burstTime = validateNumber(burstTime, 'burst time');
-                } while (burstTime == null);
+                } while (burstTime == -1);
                 queues[queueNumber - 1].burstTimes.push(burstTime);
             }
           
@@ -241,9 +247,10 @@ function handleRRAlgorithm() {
             } else {
                 for (let i = 0; i < numberOfProcesses; i++) {
                     if(askArrivalTime(i + 1) == null){
-                        return
+                        return null
                     }
                 }
+                return numberOfProcesses
             }
         }
     }
@@ -256,11 +263,12 @@ function handleRRAlgorithm() {
                 return null
             }
             arrivalTime = validateNumber(arrivalTime, 'arrival time');
-        } while (arrivalTime == null);
+        } while (arrivalTime == -1);
         arrivalTimes.push(arrivalTime);
         if(askBurstTime(index) == null){
             return null
         }
+        return arrivalTime
     }
 
     // Función para obtener el tiempo de salida o Burst Time del RR, se debe de ingresar un número entero y no se puede dejar en blanco
@@ -273,8 +281,9 @@ function handleRRAlgorithm() {
                 return null
             }
             burstTime = validateNumber(burstTime, 'burst time');
-        } while (burstTime == null);
+        } while (burstTime == -1);
         burstTimes.push(burstTime);
+        return burstTime
     }
 
   // Función para obtener el tamaño del quantum del RR, se debe de ingresar un número entero y no se puede dejar en blanco
@@ -289,6 +298,7 @@ function handleRRAlgorithm() {
                 alert(`El tamaño del quantum debe ser un número entero.`);
                 askQuantumSize();
             }
+            return quantumSize
         }
     }
   
@@ -297,19 +307,42 @@ function handleRRAlgorithm() {
         let validNumber = parseInt(value);
         if (isNaN(validNumber)) {
             alert(`El ${field} debe ser un número entero.`);
-            return null;
+            return -1;
         } else {
             return validNumber;
         }
     }
 
     if(askNumberOfProcesses() == null){
+        console.log("Omega_2")
         return
     };
     if(askQuantumSize() == null){
-        console.log("Omega");
+        console.log("Omega")
         return
     };
+
+    const data_algorithm = {
+        "algorithm_name": "RR",
+        "quantum": parseInt(`${quantumSize}`),
+        "processes": []
+    }
+
+    for(let i = 0; i < arrivalTimes.length; i++){
+        let new_process = {
+            "id_process": `P${i+1}`,
+            "arrival_time": arrivalTimes[i],
+            "burst_time": burstTimes[i]
+        }
+        data_algorithm.processes.push(new_process)
+    }
+
+    data_algorithm.processes.sort(
+        (p1, p2) => p1.arrival_time - p2.arrival_time
+    )
+
+    send_data_algorithm(data_algorithm)
+
 }
 
 // Algoritmos disponibles a usar

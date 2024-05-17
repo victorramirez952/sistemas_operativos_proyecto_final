@@ -190,12 +190,15 @@ class SJF(Algoritmo):
         current_index = self.__index_sjf()
 
         while True:
-            if(current_index == -1):
-                break
-            
             # Revisamos si hay un proceso con un burst time faltante
             if all(p.remaining_time == 0 for p in self.processes):
                 break
+            
+            if(current_index == -1):
+                self.time_service += 1
+                current_index = self.__index_sjf()
+                continue
+            
             
             while(self.processes[current_index].remaining_time > 0):
                 self.processes[current_index].remaining_time -= 1
@@ -435,11 +438,14 @@ class SRT(Algoritmo):
         current_index = 0
         future_new_index = -1
         while True:
-            if(current_index == -1):
-                break
             # Revisamos si hay un proceso con un burst time faltante
             if all(p.remaining_time == 0 for p in self.processes):
                 break
+            
+            if(current_index == -1):
+                self.time_service += 1
+                current_index = self.__getMinBurstTime()
+                continue
             
             for i in range(len(self.processes)):
                 it_process = self.processes[i]
@@ -581,12 +587,15 @@ class HRRN(Algoritmo):
         current_index = 0
 
         while True:
-            if(current_index == -1):
-                break
-            
             # Revisamos si hay un proceso con un burst time faltante
             if all(p.remaining_time == 0 for p in self.processes):
                 break
+            
+            if(current_index == -1):
+                self.time_service += 1
+                current_index = self.__get_index_hrrn()
+                continue
+            
             
             while(self.processes[current_index].remaining_time > 0):
                 self.processes[current_index].set_status("En ejecucion")
