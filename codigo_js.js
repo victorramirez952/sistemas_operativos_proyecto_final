@@ -45,34 +45,19 @@ function list_algorithms(websocket){
   }));
 }
 
-function send_data_algorithm(websocket){
-  const algorithm = {
-    algorithm_name: "RR",
-    quantum: 5,
-    processes: [
-      {
-        id_process: "P1",
-        arrival_time: 0,
-        burst_time: 26
-      },
-      {
-        id_process: "P2",
-        arrival_time: 0,
-        burst_time: 4
-      },
-      {
-        id_process: "P3",
-        arrival_time: 0,
-        burst_time: 4
-      }
-    ]
-  }
-  console.log(algorithm);
-  websocket.send(JSON.stringify({ 
-    type: "send_data_algorithm",
-    id_client: id_client,
-    data: algorithm
-  }));
+
+async function send_data_algorithm(websocket) {
+  let response = await fetch(
+    "http://127.0.0.1:5500/proyecto/casos_prueba_algoritmos/hrrn.json"
+  );
+  let algorithm = await response.json();
+  websocket.send(
+    JSON.stringify({
+      type: "send_data_algorithm",
+      id_client: id_client,
+      data: algorithm,
+    })
+  );
 }
 
 

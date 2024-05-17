@@ -18,6 +18,16 @@ global parent_PID
 EVENTOS = set()
 ALGORITHMS = ["FCFS", "RR", "SJF", "SRT", "HRNN", "MLFQ"]
 
+def execute_algoritm():
+    return
+    with open("./casos_prueba_algoritmos/fcfs.json") as f:
+        algorithm = json.load(f)
+    new_FCFS = FCFS(algorithm['algorithm_name'])
+    for p in algorithm['processes']:
+        new_process = Proceso(p['id_process'], p['arrival_time'], p['burst_time'])
+        new_FCFS.add_process(new_process)
+    new_FCFS.run_algorithm()
+
 def send_message(message):
     return json.dumps({"type": "message", "value": message})
 
@@ -38,11 +48,36 @@ async def fcfs(websocket, algorithm):
     await new_FCFS.run_algorithm(websocket)
 
 async def rr(websocket, algorithm):
-    new_RR = FCFS(algorithm['algorithm_name'])
+    print(f"Ejecutando el algorithmo {algorithm['algorithm_name']}")
+    new_RR = RR(algorithm['algorithm_name'], algorithm['quantum'])
     for p in algorithm['processes']:
         new_process = Proceso(p['id_process'], p['arrival_time'], p['burst_time'])
         new_RR.add_process(new_process)
     await new_RR.run_algorithm(websocket)
+
+async def sjf(websocket, algorithm):
+    print(f"Ejecutando el algorithmo {algorithm['algorithm_name']}")
+    new_SJF = SJF(algorithm['algorithm_name'])
+    for p in algorithm['processes']:
+        new_process = Proceso(p['id_process'], p['arrival_time'], p['burst_time'])
+        new_SJF.add_process(new_process)
+    await new_SJF.run_algorithm(websocket)
+
+async def srt(websocket, algorithm):
+    print(f"Ejecutando el algorithmo {algorithm['algorithm_name']}")
+    new_SRT = SRT(algorithm['algorithm_name'])
+    for p in algorithm['processes']:
+        new_process = Proceso(p['id_process'], p['arrival_time'], p['burst_time'])
+        new_SRT.add_process(new_process)
+    await new_SRT.run_algorithm(websocket)
+
+async def hrrn(websocket, algorithm):
+    print(f"Ejecutando el algorithmo {algorithm['algorithm_name']}")
+    new_HRRN = HRRN(algorithm['algorithm_name'])
+    for p in algorithm['processes']:
+        new_process = Proceso(p['id_process'], p['arrival_time'], p['burst_time'])
+        new_HRRN.add_process(new_process)
+    await new_HRRN.run_algorithm(websocket)
 
 
 async def servidor(websocket):
@@ -171,6 +206,15 @@ async def servidor(websocket):
                 elif(algorithm['algorithm_name'] == "RR"):
                     new_thread = threading.Thread(target=asyncio.run, args=(rr(websocket,algorithm),))
                     new_thread.start()
+                elif(algorithm['algorithm_name'] == "SJF"):
+                    new_thread = threading.Thread(target=asyncio.run, args=(sjf(websocket,algorithm),))
+                    new_thread.start()
+                elif(algorithm['algorithm_name'] == "SRT"):
+                    new_thread = threading.Thread(target=asyncio.run, args=(srt(websocket,algorithm),))
+                    new_thread.start()
+                elif(algorithm['algorithm_name'] == "HRRN"):
+                    new_thread = threading.Thread(target=asyncio.run, args=(hrrn(websocket,algorithm),))
+                    new_thread.start()
     except RuntimeError as error:
       print('Something went wrong')
       print(error)
@@ -196,6 +240,7 @@ async def main():
 # signal.signal(signal.SIGINT, signal_handler)
 if __name__ == "__main__":
     signal.signal(signal.SIGUSR1, sigusr1_handler)
+    # execute_algoritm()
     parent_PID = threading.get_native_id()
     print(f"Parent PID: {parent_PID}")
     asyncio.run(main())
