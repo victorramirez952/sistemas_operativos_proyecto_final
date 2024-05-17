@@ -157,13 +157,6 @@ class FCFS(Algoritmo):
             if(len(temp_deque) != 0):
                 process_with_highest_priority = True
                 arrived_highest_processes = temp_deque
-            # print(f"FCFS - Completion time of {it_process.id} is {self.time_service}")
-            # json_list = jsonpickle.encode(self.processes)
-            # json_string = json.dumps({"type": "algorithm_result", "data": json.loads(json_list), "message": "Resultados del algoritmo: "})
-            #await websocket.send(json_string)
-        # json_list = jsonpickle.encode(self.processes)
-        # json_string = json.dumps({"type": "algorithm_result", "data": json.loads(json_list), "message": "Resultados del algoritmo: "})
-        #await websocket.send(json_string)
         remaining_processes = _deque
         return [self.time_service, process_with_highest_priority, arrived_highest_processes, _deque, removed_processes]
 

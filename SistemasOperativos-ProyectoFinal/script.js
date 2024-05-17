@@ -358,11 +358,9 @@ function handleRRAlgorithm() {
     }
 
     if(askNumberOfProcesses() == null){
-        console.log("Omega_2")
         return
     };
     if(askQuantumSize() == null){
-        console.log("Omega")
         return
     };
 
@@ -407,7 +405,13 @@ commandInput.addEventListener("keydown", handleCommand);
 // Ejecutar las funciones de comandos cada vez que se presione Enter
 function handleCommand(event) {
     if (event.key == "Enter") {
+        if(commandInput.value.localeCompare("ask algorithm") == 0){
+            handleAskAlgorithmCommand();
+            document.getElementById("search-input").value = ""
+            return
+        }
         const command = commandInput.value.trim();
+        document.getElementById("search-input").value = ""
         switch (command.split(" ")[0]) {
             case COMMAND_ASK:
                 handleAskCommand();
@@ -421,67 +425,45 @@ function handleCommand(event) {
             case COMMAND_LIST:
                 handleListCommand();
                 break;
-            case COMMAND_ASK_ALGORITHM:
-                handleAskAlgorithmCommand();
-                break;
             default:
-                handleInvalidCommand();
+                // handleInvalidCommand();
+                alert("Comando invalido")
         }
     }
 }
 
 // Manejar comando "ask"
 function handleAskCommand() {
-    const resultado = "Eventos disponibles: " + eventosDisponibles.join("\n");
-    commandOutput.value = resultado;
+    ask_events(websocket)
+    // const resultado = "Eventos disponibles: " + eventosDisponibles.join("\n");
+    // commandOutput.value = resultado;
 }
 
 // Manejar comando "sub"
 function handleSubscribeCommand(eventName) {
-    if (eventName) {
-        if (eventosDisponibles.includes(eventName)) {
-            if (confirm(CONFIRMATION_SUBSCRIBE)) {
-                eventosSuscritos.push(eventName);
-                commandOutput.value = `Suscrito a ${eventName}`;
-            }
-        } else {
-            commandOutput.value = `El ${eventName} no existe`;
-        }
-    } else {
-        commandOutput.value = "Nombre del Evento Inválido";
-    }
+    suscribe(websocket, eventName)
 }
 
 // Manejar comando "unsub"
 function handleUnsubscribeCommand(eventName) {
-    if (eventName) {
-        if (eventosSuscritos.includes(eventName)) {
-            if (confirm(CONFIRMATION_UNSUBSCRIBE)) {
-                const index = eventosSuscritos.indexOf(eventName);
-                eventosSuscritos.splice(index, 1);
-                commandOutput.value = `Desuscrito de ${eventName}`;
-            }
-        } else {
-            commandOutput.value = `El ${eventName} no existe`;
-        }
-    } else {
-        commandOutput.value = "Nombre del Evento Inválido";
-    }
+    unsuscribe(websocket, eventName)
 }
 
 // Manejar comando "list"
 function handleListCommand() {
-    const subscribedResultado = "Eventos suscritos: \n" + eventosSuscritos.join("\n");
-    commandOutput.value = subscribedResultado;
+    list_suscribed_events(websocket)
 }
 
 // Manejar comando "askalgorithm"
 function handleAskAlgorithmCommand() {
-    const resultado = "Algoritmos Disponibles: \n" + algoritmosDisponibles.join("\n");
-    commandOutput.value = resultado;
+    list_algorithms(websocket)
 }
 
 // Manejar comando inválido
 function handleInvalidCommand() {
     commandOutput.value = "Comando Inválido. Solo se pueden usar ask, subevent_name client_name, unsub event_name, list o ask algorithm";
+}
+
+function limpiar_terminal(){
+    document.getElementById("output_server").innerText = ""
 }

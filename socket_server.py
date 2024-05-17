@@ -184,11 +184,13 @@ async def servidor(websocket):
                 print(f"{id_client}: Ha solicitado darse de baja del evento {event_name}")
                 for e in EVENTOS:
                     if(e.nombre == event_name):
-                        e.clientes.remove(websocket)
-                        e.id_clientes.remove(id_client)
-                        await websocket.send(send_message(f"Se ha dado de baja del evento {event_name}"))
                         event_founded = True
-                        break
+                        if(e.eliminar_cliente(id_client)):
+                            e.clientes.remove(websocket)
+                            await websocket.send(send_message(f"Se ha dado de baja del evento {event_name}"))
+                            break
+                        else:
+                            await websocket.send(send_message(f"Usted no esta suscrito al evento {event_name}"))        
                 if not event_founded:
                     await websocket.send(send_message(f"El evento {event_name} no existe"))
             elif(suceso['type'] == "list_suscribed_events"):

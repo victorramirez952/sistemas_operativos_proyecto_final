@@ -34,12 +34,13 @@ body {
   font-size: 0.7rem;
   font-family: monospace;
   list-style-type: none;
+  justify-content: left;
+  text-align: left;
   padding: 0;
 }
 
 .terminal-output li::before{
   content: ">>";
-  padding-right: 0.1rem;
 }
 
 #algorithm-buttons {

@@ -37,7 +37,44 @@ function send_message(message){
       "value": message,
       "id_client": id_client
     });
-  }
+}
+
+function ask_events(websocket){
+    websocket.send(JSON.stringify({ 
+      type: "ask_events",
+      id_client: id_client
+    }));
+}
+
+function suscribe(websocket, event_name){
+    websocket.send(JSON.stringify({ 
+      type: "suscribe_event", 
+      value: event_name, 
+      id_client: id_client
+    }));
+}
+
+function unsuscribe(websocket, event_name){
+    websocket.send(JSON.stringify({ 
+      type: "unsuscribe_event", 
+      value: event_name, 
+      id_client: id_client
+    }));
+}
+
+function list_suscribed_events(websocket){
+    websocket.send(JSON.stringify({ 
+      type: "list_suscribed_events",
+      id_client: id_client
+    }));
+}
+
+function list_algorithms(websocket){
+    websocket.send(JSON.stringify({ 
+      type: "list_algorithms_client",
+      id_client: id_client
+    }));
+}
 
 function send_data_algorithm(data_algorithm) {
     // let response = await fetch(
@@ -75,12 +112,12 @@ window.addEventListener("DOMContentLoaded", () => {
             const item = document.createElement("li");
             const content = document.createTextNode(suceso.message);
             item.appendChild(content);
-            outputer_server.appendChild(item)
-            for(let i = 0; i < available_events.length; i++){
-            const item = document.createElement("li");
-            const content = document.createTextNode(available_events[i]);
-            item.appendChild(content);
             output_server.appendChild(item)
+            for(let i = 0; i < available_events.length; i++){
+                const item = document.createElement("li");
+                const content = document.createTextNode(available_events[i]);
+                item.appendChild(content);
+                output_server.appendChild(item)
             }
         } else if(suceso.type == "algorithm_result"){
             let processes = suceso.data
