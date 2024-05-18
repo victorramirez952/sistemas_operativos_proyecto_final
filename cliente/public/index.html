@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Selector de Algoritmos</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+  <div class="container">
+    <input type="text" id="search-input" placeholder="Ingresa un comando">
+    <h2>Algoritmos disponibles</h2>
+    <div id="algorithm-buttons">
+      <button id="fcfs-btn">FCFS</button>
+      <button id="rr-btn">RR</button>
+      <button id="sjf-btn">SJF</button>
+      <button id="srt-btn">SRT</button>
+      <button id="hrnn-btn">HRRN</button>
+      <button id="mlfq-btn">MLFQ</button>
+    </div>
+    <br>
+    <div class="left-content">
+      <button id="btn_limpiar_terminal" onclick="limpiar_terminal()">Limpiar terminal</button>
+      <div class="terminal">
+        <ul class="terminal-output" id="output_server"></ul>
+      </div>
+    </div>
+    <div class="right-content">
+      <table id="processes-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Estado</th>
+            <th>Tiempo finalización</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- <tr>
+            <td>P1</td>
+            <td>Terminado</td>
+            <td>3</td>
+          </tr> -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <script src="websocket_logic.js"></script>
+  <script src="script.js"></script>
+</body>
+
+</html>
