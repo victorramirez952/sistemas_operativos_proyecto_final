@@ -9,29 +9,22 @@ import time
 import json
 import jsonpickle
 
+# jsonpickle para convertir objetos complejos a json
+
 from Eventos import *
 from Algoritmos import *
 from MLFQ import MLFQ
 
-USERS = set()
+USERS = set() # Almacena los websockets clientes
 global parent_PID
 
-EVENTOS = set()
+EVENTOS = set() # Almacena los eventos registrados en el servidor
 ALGORITHMS = ["FCFS", "RR", "SJF", "SRT", "HRNN", "MLFQ"]
-
-def execute_algoritm():
-    return
-    with open("./casos_prueba_algoritmos/MLFQ/mlfq_rr_fcfs_x.json") as f:
-        algorithm = json.load(f)
-    new_MLFQ = MLFQ(algorithm['algorithm_name'], algorithm['queues'], algorithm['quantums'])
-    for p in algorithm['processes']:
-        new_process = Proceso_MLFQ(p['id_process'], p['arrival_time'], p['burst_time'])
-        new_MLFQ.add_process(new_process)
-    new_MLFQ.run_algorithm()
 
 def send_message(message):
     return json.dumps({"type": "message", "value": message})
 
+# Envia una lista de datos con un mensaje especifico
 def send_list(lista, message):
     return json.dumps({"type": "list_data", "data": lista, "message": message})
 
@@ -39,8 +32,10 @@ def stop():
     global parent_PID
     print(f"Terminando servidor en 2 segundos...")
     time.sleep(2)
-    os.kill(parent_PID, signal.SIGTERM)
+    os.kill(parent_PID, signal.SIGTERM) # Se envía una señal SIGTERM para llamar al manejador de señales y terminar el servidor
 
+
+# Cliente websocket, datos del algoritmo, id del cliente
 async def fcfs(websocket, algorithm, id_client):
     print(f"Ejecutando el algorithmo {algorithm['algorithm_name']} para el client {id_client}")
     new_FCFS = FCFS(algorithm['algorithm_name'])
@@ -49,6 +44,7 @@ async def fcfs(websocket, algorithm, id_client):
         new_FCFS.add_process(new_process)
     await new_FCFS.run_algorithm(websocket, id_client)
 
+# Cliente websocket, datos del algoritmo, id del cliente
 async def rr(websocket, algorithm, id_client):
     print(f"Ejecutando el algorithmo {algorithm['algorithm_name']} para el client {id_client}")
     new_RR = RR(algorithm['algorithm_name'], algorithm['quantum'])
@@ -57,6 +53,7 @@ async def rr(websocket, algorithm, id_client):
         new_RR.add_process(new_process)
     await new_RR.run_algorithm(websocket, id_client)
 
+# Cliente websocket, datos del algoritmo, id del clientesd
 async def sjf(websocket, algorithm, id_client):
     print(f"Ejecutando el algorithmo {algorithm['algorithm_name']} para el client {id_client}")
     new_SJF = SJF(algorithm['algorithm_name'])
@@ -65,6 +62,7 @@ async def sjf(websocket, algorithm, id_client):
         new_SJF.add_process(new_process)
     await new_SJF.run_algorithm(websocket, id_client)
 
+# Cliente websocket, datos del algoritmo, id del cliente
 async def srt(websocket, algorithm, id_client):
     print(f"Ejecutando el algorithmo {algorithm['algorithm_name']} para el client {id_client}")
     new_SRT = SRT(algorithm['algorithm_name'])
@@ -73,6 +71,7 @@ async def srt(websocket, algorithm, id_client):
         new_SRT.add_process(new_process)
     await new_SRT.run_algorithm(websocket, id_client)
 
+# Cliente websocket, datos del algoritmo, id del cliente
 async def hrrn(websocket, algorithm, id_client):
     print(f"Ejecutando el algorithmo {algorithm['algorithm_name']} para el client {id_client}")
     new_HRRN = HRRN(algorithm['algorithm_name'])
@@ -81,6 +80,7 @@ async def hrrn(websocket, algorithm, id_client):
         new_HRRN.add_process(new_process)
     await new_HRRN.run_algorithm(websocket, id_client)
 
+# Cliente websocket, datos del algoritmo, id del cliente
 async def mlfq(websocket, algorithm, id_client):
     print(f"Ejecutando el algorithmo {algorithm['algorithm_name']} para el client {id_client}")
     new_MLFQ = MLFQ(algorithm['algorithm_name'], algorithm['queues'], algorithm['quantums'])
@@ -89,16 +89,15 @@ async def mlfq(websocket, algorithm, id_client):
         new_MLFQ.add_process(new_process)
     await new_MLFQ.run_algorithm(websocket, id_client)
 
-
+# Proceso principal del servidor, que atiende a cada nuevo cliente (websocket)
 async def servidor(websocket):
-    global EVENTOS
+    global EVENTOS # Para manejar la variable global EVENTOS
     try:
         USERS.add(websocket)
         greeting = f"Hola nuevo cliente, soy el servidor con PID: {parent_PID}"
         await websocket.send(send_message(greeting))
-        async for message in websocket:
-            #print(f"Message received: {message}")
-            suceso = json.loads(message)
+        async for message in websocket: # Función asíncrona que espera por nuevas peticiones de los clientes
+            suceso = json.loads(message) # Transforma el message a un formato JSON
             if(suceso['type'] == "message"):
                 id_client = suceso['id_client']
                 message = suceso['value']
@@ -110,7 +109,6 @@ async def servidor(websocket):
             elif(suceso['type'] == "create_event"):
                 new_name_evento = suceso['value']
                 new_event = Evento(new_name_evento)
-                #print(f"new_event.name: {new_event.nombre}")
                 EVENTOS.add(new_event)
                 websockets.broadcast(USERS, send_message(f"Se ha creado el evento {new_event.nombre}"))
             elif(suceso['type'] == "delete_event"):
@@ -141,7 +139,6 @@ async def servidor(websocket):
                     if(e.nombre == event_name):
                         event_founded = True
                         if len(e.id_clientes) != 0:
-                            #send_list(e.get_id_clientes())
                             await websocket.send(send_list(e.get_id_clientes(), "Clientes suscritos:"))
                         break
                 if not event_founded:
@@ -208,7 +205,7 @@ async def servidor(websocket):
                 id_client = suceso['id_client']
                 print(f"{id_client}: Ha solicitado la lista de algoritmos disponibles")
                 await websocket.send(send_list(ALGORITHMS, "Los algoritmos disponibles son:"))
-            elif(suceso['type'] == "send_data_algorithm"):
+            elif(suceso['type'] == "send_data_algorithm"): ## Cuando un cliente envía datos para procesarlos por un algoritmo
                 id_client = suceso['id_client']
                 algorithm = suceso['data']
                 print(f"{id_client}: Ha enviado datos para efectuar el algoritmo {algorithm['algorithm_name']}")
@@ -230,32 +227,23 @@ async def servidor(websocket):
                 elif(algorithm['algorithm_name'] == "MLFQ"):
                     new_thread = threading.Thread(target=asyncio.run, args=(mlfq(websocket,algorithm, id_client),))
                     new_thread.start()
-    except RuntimeError as error:
+    except RuntimeError as error: # Si surge alguna excepción
       print('Something went wrong')
       print(error)
     finally:
-        print("Removiendo cliente websocket")
+        print("Removiendo cliente websocket") # Cuando un cliente se desconecta
         USERS.remove(websocket)
     
-
-def sigusr1_handler(signum, frame):
-    print(f"Terminando servidor")
-    websockets.broadcast(USERS, "Finalizar")
-
 async def main():
-    # Set the stop condition when receiving SIGTERM.
     loop = asyncio.get_running_loop()
     stop = loop.create_future()
-    loop.add_signal_handler(signal.SIGTERM, stop.set_result, None)
-    loop.add_signal_handler(signal.SIGINT, stop.set_result, None)
+    loop.add_signal_handler(signal.SIGTERM, stop.set_result, None) # Para el servidor con la señal SIGTERM
+    loop.add_signal_handler(signal.SIGINT, stop.set_result, None) # Para el servidor con la señal SIGINT
     
     async with websockets.serve(servidor, "localhost", 8765, ping_interval=None):
         await stop
 
-# signal.signal(signal.SIGINT, signal_handler)
 if __name__ == "__main__":
-    signal.signal(signal.SIGUSR1, sigusr1_handler)
-    execute_algoritm()
     parent_PID = threading.get_native_id()
     print(f"Parent PID: {parent_PID}")
     asyncio.run(main())

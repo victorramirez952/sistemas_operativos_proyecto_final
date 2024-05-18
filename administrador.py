@@ -5,8 +5,8 @@ import threading
 import json
 from timedinput import timedinput
 
-ID_CLIENT = "1934Ty9Bwp"
-STATUS = True
+ID_CLIENT = "1934Ty9Bwp" # Fijo para identificar al administrador más facilmente
+STATUS = True # Para administrar cuando se genere un error o terminar el programa
 
 PROCS = []
 
@@ -35,11 +35,9 @@ def stop_server():
 def user_input(wsapp):
     print(f"Current process PID: {os.getpid()}")
     global STATUS
-    #print(f"Ingresa un comando: ")
     while STATUS:
         try:
-            # command = f"Mensaje del proceso cliente {os.getpid()}"
-            #print(f"El STATUS es {STATUS}")
+            # timedinput espera durante 5 segundos por una entrada del usuario
             command = timedinput("Ingresa un comando: \n", timeout=5, default="Null")
             if not STATUS:
                 break
@@ -47,7 +45,7 @@ def user_input(wsapp):
                 continue
             elif command == "exit":
                 wsapp.send(stop_server())
-            elif command[:4] == "add ":
+            elif command[:4] == "add ": # Obtiene los primeros 4 caracteres del comando
                 if(command.count(' ') > 1):
                     print("El nombre del evento debe ser una sola palabra")
                 else:
@@ -66,7 +64,6 @@ def user_input(wsapp):
                     event_name = command[8:len(command)]
                     wsapp.send(trigger_event(event_name))
             elif command[:5] == "list ":
-                #list algorithm
                 if(command[5:14] == "algorithm"):
                     wsapp.send(list_algorithms())
                 elif(command.count(' ') > 1):
@@ -76,13 +73,10 @@ def user_input(wsapp):
                     wsapp.send(list_event(event_name))
             else:
                 continue
-            #time.sleep(2)
         except RuntimeError as error:
-            #print('An exception occurred in line 20')
-            #print(error)
             STATUS = False
 
-def on_message(wsapp, message):
+def on_message(wsapp, message): # Cada vez que llega un mensaje del servidor
     global STATUS
     suceso = json.loads(message)
     if suceso['type'] == "message":
@@ -97,13 +91,13 @@ def on_ping(wsapp, message):
 def on_pong(wsapp, message):
     print("Got a pong! No need to respond")
 
-def on_close(wsapp, close_status_code, close_msg):
+def on_close(wsapp, close_status_code, close_msg): # Cuando se cierra la conexión websocket
     global STATUS
     print("Finalizando programa")
     STATUS = False
     wsapp.close()
 
-def on_open(wsapp):
+def on_open(wsapp): # Cuando se abre una conexión websocket nueva
     wsapp.send(send_message(f"Soy el administrador con ID {ID_CLIENT}"))
     x = threading.Thread(target=user_input, args=(wsapp,))
     x.start()
