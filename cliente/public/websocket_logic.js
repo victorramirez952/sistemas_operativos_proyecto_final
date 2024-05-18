@@ -90,7 +90,7 @@ function send_data_algorithm(data_algorithm) {
     );
 }
 
-
+    
 window.addEventListener("DOMContentLoaded", () => {
     id_client = Math.random().toString(36).slice(2, 13);
     console.log("ID de cliente: ", id_client);

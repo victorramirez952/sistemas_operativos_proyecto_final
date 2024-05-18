@@ -6,6 +6,7 @@ import threading
 import sys
 from collections import deque
 
+# Utilizado en el algoritmo MLFQ, para revisar si llegan procesos con mayor prioridad (queue_index = prioridad)
 def mlfq_check_arrival_highest_process(time_service, processes, queue_index, flag_equal=True):
     arrived_highest_processes = deque()
     if(flag_equal):
@@ -24,6 +25,7 @@ def mlfq_check_arrival_highest_process(time_service, processes, queue_index, fla
                 arrived_highest_processes.append(it_process)
     return arrived_highest_processes
 
+# Cuando llegan nuevos procesos en el algoritmo Round Robin
 def mlfq_rr_check_arrival(time_service, processes, _deque, is_mlfq=False, removed_processes=None, queue_index=-1):
     if(not is_mlfq):
         for p in processes:
@@ -37,6 +39,7 @@ def mlfq_rr_check_arrival(time_service, processes, _deque, is_mlfq=False, remove
             if(it_process not in _deque and it_process not in removed_processes and it_process.queue_index == queue_index):
                 if(not it_process.completed):
                     _deque.append(it_process)
+
 
 async def send_algorithm_result(message):
     await asyncio.sleep(2)
@@ -56,6 +59,7 @@ class Proceso:
     def set_status(self, new_status):
         self.status = new_status
 
+# Variante de proceso utilizado en el algoritmo MLFQ
 class Proceso_MLFQ(Proceso):
     def __init__(self, id, arrival_time, burst_time):
         Proceso.__init__(self, id, arrival_time, burst_time)
@@ -74,12 +78,13 @@ class Algoritmo:
     def get_processes():
         return self.processes
     
+    # Envia datos de los procesos en formato JSON
     async def send_json(self, websocket):
         json_list = jsonpickle.encode(self.processes)
         json_string = json.dumps({"type": "algorithm_result", "data": json.loads(json_list), "message": "Resultados del algoritmo: "})
         await websocket.send(json_string)
     
-
+    # Calcula el TA y el WT de todos los procesos
     def turnaround_time_waiting_time(self):
         for i in self.processes:
             i.turnaround_time = i.completion_time - i.arrival_time
@@ -112,6 +117,7 @@ class FCFS(Algoritmo):
         await self.send_json(websocket)
         print(f"Algoritmo First Come First Serve completado para el cliente {id_client}")
 
+    # Variante para el algoritmo MLFQ
     async def run_algorithm_mlfq(self, websocket, queue_index, _deque, max_index):
         if(len(_deque) == 0):
             for p in self.processes:
@@ -216,6 +222,7 @@ class SJF(Algoritmo):
         await self.send_json(websocket)
         print(f"Algoritmo Shortest Job First completado para el cliente {id_client}")
 
+    # Variante para el algoritmo MLFQ
     async def run_algorithm_mlfq(self, websocket, queue_index, _deque, max_index):
         while(self.time_service < self.processes[0].arrival_time):
             self.time_service += 1
@@ -257,7 +264,6 @@ class SJF(Algoritmo):
 
                 self.processes[current_index].set_status("En espera")
                 await self.send_json(websocket)
-                # print_elements(arrived_highest_processes, "*")
             if(process_with_highest_priority):
                 break
             current_index = self.__index_sjf(queue_index)
@@ -297,7 +303,8 @@ class RR(Algoritmo):
             if all(p.remaining_time == 0 for p in self.processes):
                 break
             
-            current_process = _deque[0]
+            if(len(_deque) != 0):
+                current_process = _deque[0]
             current_index = 0
             for p in self.processes:
                 if(p.id == current_process.id):
@@ -331,6 +338,7 @@ class RR(Algoritmo):
         await self.send_json(websocket)
         print(f"Algoritmo Round Robin completado para el cliente {id_client}")
     
+    # Variante para el algoritmo MLFQ
     async def run_algorithm_mlfq(self, websocket, queue_index, _deque, max_index):
         if(not self.is_mlfq):
             return
@@ -478,6 +486,7 @@ class SRT(Algoritmo):
         await self.send_json(websocket)
         # Algoritmo Shortest Remaining Time completado para el cliente {id_client}")
 
+    # Variante para el algoritmo MLFQ
     async def run_algorithm_mlfq(self, websocket, queue_index, _deque, max_index):
         while(self.time_service < self.processes[0].arrival_time):
             self.time_service += 1
@@ -613,6 +622,7 @@ class HRRN(Algoritmo):
         await self.send_json(websocket)
         print(f"Algoritmo Highest Response Ratio Next completado para el cliente {id_client}")
 
+    # Variante para el algoritmo MLFQ
     async def run_algorithm_mlfq(self, websocket, queue_index, _deque, max_index):
         while(self.time_service < self.processes[0].arrival_time):
             self.time_service += 1

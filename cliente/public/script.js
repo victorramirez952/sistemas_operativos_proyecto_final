@@ -4,8 +4,6 @@ const COMMAND_SUBSCRIBE = "sub";
 const COMMAND_UNSUBSCRIBE = "unsub";
 const COMMAND_LIST = "list";
 const COMMAND_ASK_ALGORITHM = "ask algorithm";
-const CONFIRMATION_SUBSCRIBE = "Estás seguro de que quieres suscribirte a este evento?";
-const CONFIRMATION_UNSUBSCRIBE = "Estás seguro de que quieres desuscribirte a este evento?";
 //Constantes para asignar los botones de los algoritmos y que cada uno realice alguna acción
 const algorithmButtons = document.getElementById('algorithm-buttons');
 const buttons = Array.from(algorithmButtons.children);
@@ -389,11 +387,6 @@ function handleRRAlgorithm() {
 
 // Algoritmos disponibles a usar
 var algoritmosDisponibles = ["FCFS", "FIFO", "RR", "SJF", "SRT", "HRNN", "MLFQ"];
-
-// Eventos disponibles a usar
-var eventosDisponibles = ["Evento1", "Evento2", "Evento3"];
-// Eventos suscritos
-var eventosSuscritos = [];
 
 // Permitir la escritura de comandos en el search-input y mostrar los resultados en la terminal
 var commandInput = document.getElementById("search-input");
