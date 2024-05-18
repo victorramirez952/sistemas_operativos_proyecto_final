@@ -1,0 +1,27 @@
+{
+    "algorithm_name": "SJF",
+    "quantum": -1,
+    "processes": [
+      {
+        "id_process": "P1",
+        "arrival_time": 0,
+        "burst_time": 6
+      },
+      {
+        "id_process": "P2",
+        "arrival_time": 0,
+        "burst_time": 8
+      },
+      {
+        "id_process": "P3",
+        "arrival_time": 0,
+        "burst_time": 7
+      },
+      {
+        "id_process": "P4",
+        "arrival_time": 0,
+        "burst_time": 3
+      }
+    ]
+  }
+  
